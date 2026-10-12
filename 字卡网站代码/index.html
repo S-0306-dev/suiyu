@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f1eafb" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="字卡传讯" />
+  <title>字卡传讯 · 与梦角对话</title>
+  <meta name="description" content="一对一字卡传讯：写下想说的话，梦角会从你的字卡库中随机抽一张卡回应你。" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body data-view="home">
+  <!-- ==================== 主页（手机主屏样式） ==================== -->
+  <div class="home" id="homeScreen">
+    <div class="home-scene">
+      <span class="home-blob hb1"></span>
+      <span class="home-blob hb2"></span>
+      <span class="home-blob hb3"></span>
+      <div class="home-stars" id="homeStars"></div>
+
+      <div class="home-top">
+        <div class="home-clock" id="homeClock">00:00</div>
+        <div class="home-date" id="homeDate">10月12日 星期一</div>
+      </div>
+
+      <div class="home-greet">
+        <div class="avatar avatar-md" id="homeAvatar">🌙</div>
+        <div class="home-greet-text">
+          <div class="home-greet-name" id="homeName">梦角</div>
+          <div class="home-greet-line" id="homeGreet">今天也来找我说话吧。</div>
+        </div>
+      </div>
+
+      <div class="home-anni" id="homeAnni">
+        <div class="anni-head">
+          <span class="anni-head-title">纪念日</span>
+          <span class="anni-head-more" id="anniMore"></span>
+          <button class="anni-add" id="anniAddBtn" type="button" title="添加纪念日" aria-label="添加纪念日">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+        <div class="anni-lines" id="anniLines"></div>
+      </div>
+
+      <div class="home-pages" id="homePages"></div>
+
+      <div class="home-editbar" id="homeEditBar" hidden>
+        <span class="home-edit-tip">拖动排序 · 点 ✕ 收起</span>
+        <button class="home-edit-btn" id="homeRestoreBtn" type="button">恢复隐藏</button>
+        <button class="home-edit-btn primary" id="homeEditDone" type="button">完成</button>
+      </div>
+
+      <div class="home-foot">
+        <div class="home-dots" id="homeDots"></div>
+        <span class="home-home-bar"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 背景装饰 -->
+  <div class="backdrop" aria-hidden="true">
+    <span class="blob b1"></span>
+    <span class="blob b2"></span>
+    <span class="blob b3"></span>
+    <span class="twinkle t1">✦</span>
+    <span class="twinkle t2">✧</span>
+    <span class="twinkle t3">✦</span>
+    <span class="twinkle t4">✧</span>
+    <span class="twinkle t5">✦</span>
+  </div>
+
+  <!-- ==================== 页面：字卡库 ==================== -->
+  <div class="sub-page" id="cardsPage">
+    <div class="sp-scene">
+      <header class="sp-head">
+        <button class="icon-btn sp-back" type="button" data-back aria-label="返回主页" title="返回主页">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5 8 12l6.5 7"/></svg>
+        </button>
+        <h1>字卡库</h1>
+        <span class="sp-count count-badge" id="cardCount">0 张</span>
+      </header>
+
+      <div class="sp-body">
+        <section class="profile" id="profileCard">
+          <div class="avatar avatar-md" id="profileAvatar" title="双击拍拍梦角">🌙</div>
+          <div class="profile-info">
+            <div class="profile-name" id="profileName">梦角</div>
+            <div class="profile-sign" id="profileSign">在梦的另一端等你</div>
+          </div>
+          <button class="icon-btn" id="editProfileBtn" type="button" aria-label="编辑梦角资料">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>
+          </button>
+        </section>
+
+        <div class="toolbar">
+          <button class="btn btn-primary btn-block" id="addCardBtn" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            新增字卡
+          </button>
+          <div class="toolbar-row">
+            <button class="btn btn-ghost" id="bulkBtn" type="button">批量导入</button>
+            <button class="btn btn-ghost" id="importFileBtn" type="button" title="从 .txt / .json 文件导入字卡，可一次选多个">导入文件</button>
+            <button class="btn btn-ghost" id="importBtn" type="button">导入备份</button>
+            <button class="btn btn-ghost" id="exportBtn" type="button">导出备份</button>
+          </div>
+        </div>
+
+        <div class="search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-3.6-3.6"/></svg>
+          <input id="searchInput" type="search" placeholder="搜索字卡内容或标签…" autocomplete="off" />
+        </div>
+
+        <div class="group-bar">
+          <div class="seg seg-sm" id="cardsViewSeg">
+            <button type="button" data-mode="list">列表</button>
+            <button type="button" data-mode="group">分组</button>
+          </div>
+          <button class="link-btn" id="groupToggleAllBtn" type="button">全部收起</button>
+        </div>
+
+        <div class="card-list" id="cardList"><!-- JS 渲染 --></div>
+
+        <div class="sidebar-foot">
+          <span id="footHint">双击卡片可快速编辑</span>
+          <span class="foot-actions">
+            <button class="link-btn" id="dedupeCardsBtn" type="button" title="内容完全一样的卡只保留一张">清理重复</button>
+            <button class="link-danger" id="clearCardsBtn" type="button">清空字卡库</button>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 页面：写信 ==================== -->
+  <div class="sub-page" id="writePage">
+    <div class="sp-scene">
+      <header class="sp-head">
+        <button class="icon-btn sp-back" type="button" data-back aria-label="返回主页" title="返回主页">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5 8 12l6.5 7"/></svg>
+        </button>
+        <h1>给梦角写信</h1>
+        <span class="sp-count" id="letterCount">0 字</span>
+      </header>
+
+      <div class="sp-body">
+        <label class="field">
+          <span class="field-label">标题 <em>（选填）</em></span>
+          <input id="letterSubject" type="text" maxlength="20" placeholder="例如：今天的天气" />
+        </label>
+        <label class="field">
+          <span class="field-label">正文</span>
+          <textarea id="letterBody" rows="10" placeholder="慢慢写，不着急。写多长都可以。"></textarea>
+        </label>
+        <label class="field">
+          <span class="field-label">信纸</span>
+          <div class="paper-picker" id="paperPicker"></div>
+        </label>
+        <span class="field-tip">
+          寄出后梦角会挑几张字卡，认认真真回你一封，还会引用你信里的句子。
+        </span>
+      </div>
+
+      <footer class="sp-foot">
+        <button class="btn btn-ghost" type="button" data-back>取消</button>
+        <button class="btn btn-primary" type="button" id="letterSendBtn">寄出</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ==================== 页面：信箱 ==================== -->
+  <div class="sub-page" id="mailPage">
+    <div class="sp-scene">
+      <header class="sp-head">
+        <button class="icon-btn sp-back" type="button" data-back aria-label="返回主页" title="返回主页">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5 8 12l6.5 7"/></svg>
+        </button>
+        <h1>信箱</h1>
+        <span class="sp-count" id="mailCount">共 0 封</span>
+      </header>
+
+      <div class="sp-body">
+        <div class="mail-actions">
+          <button class="btn btn-primary btn-sm" type="button" id="mailWriteBtn">写一封</button>
+          <button class="btn btn-ghost btn-sm" type="button" id="mailAskBtn">让梦角写给我</button>
+        </div>
+        <div class="mail-list" id="mailList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app">
+
+    <!-- ==================== 主区：聊天 ==================== -->
+    <main class="chat">
+      <header class="chat-head">
+        <button class="icon-btn" id="homeBtn" type="button" aria-label="返回主页" title="返回主页">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 10.8 12 4l8.4 6.8"/><path d="M6.2 10.2V19.5h11.6V10.2"/><path d="M10 19.5v-5h4v5"/></svg>
+        </button>
+
+        <div class="chat-peer">
+          <div class="avatar avatar-sm" id="peerAvatar" title="双击拍拍梦角">🌙</div>
+          <div class="peer-text">
+            <div class="peer-name" id="peerName">梦角</div>
+            <div class="peer-status"><span class="dot"></span><span id="peerStatus">在线，随时抽一张卡给你</span><span class="pool-inline" id="poolInline">· 卡池 0 张</span></div>
+          </div>
+        </div>
+
+        <div class="chat-head-actions">
+          <span class="pool-pill" id="poolPill">卡池 0 张</span>
+          <button class="icon-btn" id="freqBtn" type="button" aria-label="梦角频率" title="梦角频率">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h7M16.5 7.5H20"/><path d="M4 12h3M11.5 12H20"/><path d="M4 16.5h8M17 16.5H20"/><circle cx="13.5" cy="7.5" r="2.1"/><circle cx="9.2" cy="12" r="2.1"/><circle cx="14.6" cy="16.5" r="2.1"/></svg>
+          </button>
+          <button class="icon-btn" id="callMenuBtn" type="button" aria-haspopup="true" aria-label="通话" title="通话">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.6h3.1l1.5 3.9-2.1 1.4a12.4 12.4 0 0 0 6.1 6.1l1.4-2.1 3.9 1.5v3.1a1.9 1.9 0 0 1-2.1 1.9A16.6 16.6 0 0 1 4.6 5.7a1.9 1.9 0 0 1 1.9-2.1z"/></svg>
+          </button>
+          <button class="icon-btn" id="clearChatBtn" type="button" aria-label="清空对话" title="清空对话">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4.8h6V7"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- 拨号菜单 -->
+      <div class="call-menu" id="callMenu" hidden>
+        <button class="call-menu-item" type="button" data-call="voice">
+          <span class="cmi-ic">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.6h3.1l1.5 3.9-2.1 1.4a12.4 12.4 0 0 0 6.1 6.1l1.4-2.1 3.9 1.5v3.1a1.9 1.9 0 0 1-2.1 1.9A16.6 16.6 0 0 1 4.6 5.7a1.9 1.9 0 0 1 1.9-2.1z"/></svg>
+          </span>
+          <span class="cmi-tx">
+            <strong data-i18n="voiceCall">语音通话</strong>
+            <em data-i18n="voiceDesc">安静地听梦角说话</em>
+          </span>
+        </button>
+        <button class="call-menu-item video" type="button" data-call="video">
+          <span class="cmi-ic">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="12.5" height="12" rx="2.6"/><path d="M15.5 10.6 21 7.4v9.2l-5.5-3.2z"/></svg>
+          </span>
+          <span class="cmi-tx">
+            <strong data-i18n="videoCall">视频通话</strong>
+            <em data-i18n="videoDesc">看看梦角现在的样子</em>
+          </span>
+        </button>
+
+        <div class="call-menu-sep"></div>
+
+        <div class="menu-block">
+          <div class="menu-label" data-i18n="subtitleLang">字幕语言</div>
+          <div class="seg" id="langSeg">
+            <button type="button" data-lang="zh-Hans">简体</button>
+            <button type="button" data-lang="zh-Hant">繁體</button>
+            <button type="button" data-lang="en">English</button>
+          </div>
+        </div>
+
+        <div class="call-menu-sep"></div>
+
+        <label class="switch-row">
+          <input type="checkbox" id="autoCallToggle" />
+          <span data-i18n="autoCall">允许梦角主动来电</span>
+        </label>
+
+        <div class="call-menu-sep"></div>
+
+        <div class="menu-block">
+          <div class="menu-label" data-i18n="bgm">背景音乐</div>
+
+          <label class="switch-row tight">
+            <input type="checkbox" id="musicToggle" />
+            <span data-i18n="bgmPlay">播放背景音乐</span>
+          </label>
+
+          <div class="volume-row">
+            <span class="vol-label" data-i18n="vol">音量</span>
+            <input type="range" id="musicVolume" min="0" max="100" step="1" value="70" aria-label="音量" />
+          </div>
+
+          <div class="seg seg-sm" id="musicSourceSeg">
+            <button type="button" data-src="builtin" data-i18n="bgmBuiltin">内置生成</button>
+            <button type="button" data-src="custom" data-i18n="bgmCustom">自己的文件</button>
+          </div>
+
+          <div class="menu-label sub" data-i18n="timbre">音色</div>
+          <div class="seg seg-sm seg-2" id="musicTimbreSeg">
+            <button type="button" data-timbre="noise" data-i18n="bgmNoise">氛围白噪音</button>
+            <button type="button" data-timbre="rain" data-i18n="bgmRain">雨声</button>
+            <button type="button" data-timbre="wind" data-i18n="bgmWind">风声</button>
+            <button type="button" data-timbre="pad" data-i18n="bgmPad">柔和和声</button>
+          </div>
+
+          <div class="file-row">
+            <button class="btn btn-ghost btn-sm" type="button" id="musicPickBtn" data-i18n="chooseFile">选择音乐文件</button>
+            <button class="btn btn-ghost btn-sm" type="button" id="musicClearBtn" data-i18n="clearFile">清除</button>
+          </div>
+          <div class="file-name" id="musicFileName">未选择音乐文件</div>
+        </div>
+
+        <div class="call-menu-sep"></div>
+
+        <button class="call-menu-item subtle" type="button" id="askCallBtn">
+          <span class="cmi-ic soft">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v3M12 17.5v3M4.8 4.8l2.1 2.1M17.1 17.1l2.1 2.1M3.5 12h3M17.5 12h3M4.8 19.2l2.1-2.1M17.1 6.9l2.1-2.1"/></svg>
+          </span>
+          <span class="cmi-tx">
+            <strong data-i18n="askCall">让梦角打给我</strong>
+            <em data-i18n="askCallDesc">由梦角决定要不要打</em>
+          </span>
+        </button>
+      </div>
+
+      <div class="messages" id="messages">
+        <div class="empty" id="emptyState">
+          <div class="empty-stack">
+            <span class="empty-card back"></span>
+            <span class="empty-card mid"></span>
+            <span class="empty-card front">💜</span>
+          </div>
+          <h3>给梦角写第一句话吧</h3>
+          <p>你的每条消息，都会收到一张从字卡库里随机抽出的卡片。</p>
+        </div>
+      </div>
+
+      <div class="composer-wrap">
+        <!-- 表情面板 -->
+        <div class="emoji-panel" id="emojiPanel" hidden>
+          <div class="emoji-tabs">
+            <button type="button" data-tab="face" class="active">黄脸</button>
+            <button type="button" data-tab="kao">颜文字</button>
+            <button type="button" data-tab="sticker">表情包</button>
+          </div>
+          <div class="emoji-body">
+            <div class="emoji-pane" data-pane="face"></div>
+            <div class="emoji-pane" data-pane="kao" hidden></div>
+            <div class="emoji-pane" data-pane="sticker" hidden></div>
+          </div>
+        </div>
+
+        <form class="composer" id="composer" autocomplete="off">
+          <button type="button" class="icon-btn emoji-btn" id="emojiBtn" aria-label="表情" title="表情">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.6"/><path d="M8.7 14.1a4.3 4.3 0 0 0 6.6 0"/><path d="M9.5 9.9v.6"/><path d="M14.5 9.9v.6"/></svg>
+          </button>
+          <textarea id="input" rows="1" placeholder="跟梦角说点什么…" aria-label="输入消息"></textarea>
+          <button type="submit" class="send-btn" id="sendBtn" aria-label="发送" title="发送">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.1 20.3 3.7l-3.9 16.6-3.7-6.2L4 11.1z"/><path d="M12.7 14.1 20.3 3.7"/></svg>
+          </button>
+        </form>
+      </div>
+      <div class="composer-hint">Enter 发送 · Shift + Enter 换行 · 双击梦角头像可以拍拍它</div>
+    </main>
+  </div>
+
+  <!-- ==================== 弹窗：新增 / 编辑字卡 ==================== -->
+  <div class="modal" id="cardModal" hidden>
+    <div class="modal-scrim" data-close></div>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="cardModalTitle">
+      <header class="modal-head">
+        <h2 id="cardModalTitle">新增字卡</h2>
+        <button class="icon-btn" type="button" data-close aria-label="关闭">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+      <div class="modal-body">
+        <label class="field">
+          <span class="field-label">字卡内容</span>
+          <textarea id="cardText" rows="4" placeholder="写下这张卡想说的话…"></textarea>
+        </label>
+        <label class="field">
+          <span class="field-label">标签 <em>（选填，可以有多个）</em></span>
+          <div class="tag-editor" id="tagEditor">
+            <div class="tag-chips" id="cardTagChips"></div>
+            <input id="cardTag" type="text" list="tagSuggestions" placeholder="输入标签后按回车" maxlength="12" />
+          </div>
+          <datalist id="tagSuggestions"></datalist>
+        </label>
+      </div>
+      <footer class="modal-foot">
+        <button class="btn btn-ghost" type="button" data-close>取消</button>
+        <button class="btn btn-primary" type="button" id="cardSaveBtn">保存字卡</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ==================== 弹窗：批量导入 ==================== -->
+  <div class="modal" id="bulkModal" hidden>
+    <div class="modal-scrim" data-close></div>
+    <div class="modal-dialog modal-lg" role="dialog" aria-modal="true" aria-labelledby="bulkModalTitle">
+      <header class="modal-head">
+        <h2 id="bulkModalTitle">批量导入字卡</h2>
+        <button class="icon-btn" type="button" data-close aria-label="关闭">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+      <div class="modal-body">
+        <p class="hint-box">
+          一行一张卡，支持三种写法：<br />
+          <code>标签 | 字卡内容</code> · <code>【标签】字卡内容</code> · <code>字卡内容</code><br />
+          以 <code>#</code> 或 <code>//</code> 开头的行会被忽略，方便你写注释。
+        </p>
+        <textarea id="bulkText" rows="12" placeholder="晚安 | 闭上眼睛之前，记得把眉头松开。&#10;鼓励 | 你已经做得很好了。&#10;今天也想见你。"></textarea>
+        <label class="check-row">
+          <input type="checkbox" id="bulkAppend" checked />
+          <span>追加到现有字卡库（取消勾选则替换全部）</span>
+        </label>
+      </div>
+      <footer class="modal-foot">
+        <span class="foot-note" id="bulkCount">识别到 0 张</span>
+        <button class="btn btn-ghost" type="button" data-close>取消</button>
+        <button class="btn btn-primary" type="button" id="bulkSaveBtn">导入</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ==================== 弹窗：梦角资料 ==================== -->
+  <div class="modal" id="profileModal" hidden>
+    <div class="modal-scrim" data-close></div>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
+      <header class="modal-head">
+        <h2 id="profileModalTitle">编辑梦角资料</h2>
+        <button class="icon-btn" type="button" data-close aria-label="关闭">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+      <div class="modal-body">
+        <label class="field">
+          <span class="field-label">名字</span>
+          <input id="profileNameInput" type="text" maxlength="16" placeholder="梦角" />
+        </label>
+        <label class="field">
+          <span class="field-label">签名 / 状态</span>
+          <input id="profileSignInput" type="text" maxlength="30" placeholder="在梦的另一端等你" />
+        </label>
+        <label class="field">
+          <span class="field-label">拍一拍后缀 <em>（选填，双击头像触发）</em></span>
+          <input id="profilePatInput" type="text" maxlength="24" placeholder="的肩膀" />
+        </label>
+        <div class="field">
+          <span class="field-label">头像</span>
+          <div class="avatar-picker" id="avatarPicker"><!-- JS 渲染 --></div>
+          <div class="avatar-upload">
+            <label class="btn btn-ghost btn-sm">
+              上传图片
+              <input type="file" id="avatarFile" accept="image/*" hidden />
+            </label>
+            <button class="btn btn-ghost btn-sm" type="button" id="avatarClearBtn">移除图片</button>
+            <span class="foot-note">图片会保存在本机浏览器里</span>
+          </div>
+        </div>
+      </div>
+      <footer class="modal-foot">
+        <button class="btn btn-ghost" type="button" data-close>取消</button>
+        <button class="btn btn-primary" type="button" id="profileSaveBtn">保存</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ==================== 弹窗：梦角频率 ==================== -->
+  <div class="modal" id="freqModal" hidden>
+    <div class="modal-scrim" data-close></div>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="freqModalTitle">
+      <header class="modal-head">
+        <h2 id="freqModalTitle">梦角频率</h2>
+        <button class="icon-btn" type="button" data-close aria-label="关闭">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+
+      <div class="modal-body">
+        <div class="field">
+          <span class="field-label">回你消息的频率</span>
+          <div class="seg seg-sm" id="replyRateSeg">
+            <button type="button" data-rate="rare">很少</button>
+            <button type="button" data-rate="half">一半</button>
+            <button type="button" data-rate="often">经常</button>
+            <button type="button" data-rate="always">每次必回</button>
+          </div>
+          <span class="field-tip">
+            不是每次必回时，梦角有时会只留一个「已读」，不接话。
+          </span>
+        </div>
+
+        <div class="field">
+          <span class="field-label">回复前的间隔</span>
+          <div class="seg seg-sm" id="replyDelaySeg">
+            <button type="button" data-delay="fast">很快</button>
+            <button type="button" data-delay="normal">正常</button>
+            <button type="button" data-delay="slow">慢一些</button>
+            <button type="button" data-delay="custom">自定义</button>
+          </div>
+          <div class="inline-num" id="replyDelayCustom" hidden>
+            <span>大约等</span>
+            <input type="number" id="replyDelaySec" min="0.1" max="10" step="0.1" />
+            <span>秒后回复</span>
+          </div>
+          <span class="field-tip">
+            你发完消息后，梦角"打字"的时间。很快 0.2～0.5 秒，正常 0.6～1.4 秒，慢一些 1.6～3.2 秒。
+          </span>
+        </div>
+
+        <div class="field">
+          <span class="field-label">回复时用表情的频率</span>
+          <div class="seg seg-sm" id="exprRateSeg">
+            <button type="button" data-rate="off">关闭</button>
+            <button type="button" data-rate="less">偶尔</button>
+            <button type="button" data-rate="often">经常</button>
+            <button type="button" data-rate="half">一半一半</button>
+          </div>
+          <span class="field-tip">
+            梦角会从「黄脸 / 颜文字 / 表情包」里随机挑一个回给你——包括内置的和你自己添加的。
+          </span>
+        </div>
+
+        <div class="field">
+          <span class="field-label">梦角主动拍你的频率</span>
+          <div class="seg seg-sm" id="patRateSeg">
+            <button type="button" data-rate="off">关闭</button>
+            <button type="button" data-rate="less">偶尔</button>
+            <button type="button" data-rate="often">经常</button>
+            <button type="button" data-rate="half">一半一半</button>
+          </div>
+          <span class="field-tip">
+            梦角会毫无理由地拍你一下，聊天里显示成「梦角 拍了拍你…」。
+            设成「关闭」它就不会主动拍你，但你双击它头像时它仍然会回拍你。
+          </span>
+        </div>
+
+        <div class="field">
+          <span class="field-label">按当前时段优先抽卡</span>
+          <div class="seg seg-sm" id="timeAwareSeg">
+            <button type="button" data-on="1">开启</button>
+            <button type="button" data-on="0">关闭</button>
+          </div>
+          <span class="field-tip">
+            开启后，梦角会看时间挑卡：清晨偏向<span class="tip-tag">早晨 / 问候</span>，
+            白天偏向<span class="tip-tag">日常 / 闲聊 / 食物 / 关心</span>，
+            傍晚偏向<span class="tip-tag">加班 / 计划 / 旅行</span>，
+            深夜偏向<span class="tip-tag">深夜 / 睡前 / 晚安 / 心情</span>。约 3/4 的概率优先，其余纯随机。
+          </span>
+        </div>
+
+        <div class="field">
+          <span class="field-label">主动打给你的频率</span>
+          <div class="seg seg-sm" id="callRateSeg">
+            <button type="button" data-rate="off">关闭</button>
+            <button type="button" data-rate="rare">很少</button>
+            <button type="button" data-rate="normal">偶尔</button>
+            <button type="button" data-rate="often">经常</button>
+            <button type="button" data-rate="custom">自定义</button>
+          </div>
+          <div class="inline-num stack" id="callRangeCustom" hidden>
+            <div class="range-row">
+              <span>最短</span>
+              <input type="number" id="callRangeMin" min="0.5" max="720" step="0.5" />
+              <span>分钟</span>
+            </div>
+            <div class="range-row">
+              <span>最长</span>
+              <input type="number" id="callRangeMax" min="0.5" max="720" step="0.5" />
+              <span>分钟</span>
+            </div>
+          </div>
+          <span class="field-tip">
+            网站开着时梦角可能主动来电。预设：很少约 15～30 分钟，偶尔约 5～12 分钟，经常约 1.5～4 分钟；
+            自定义时，实际间隔会在你填的「最短～最长」之间随机取。
+          </span>
+        </div>
+      </div>
+
+      <footer class="modal-foot">
+        <button class="btn btn-ghost" type="button" id="freqResetBtn">恢复默认</button>
+        <button class="btn btn-primary" type="button" id="freqSaveBtn">保存</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ==================== 弹窗：备份与恢复 ==================== -->
+  <div class="modal" id="backupModal" hidden>
+    <div class="modal-scrim" data-close></div>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="backupTitle">
+      <header class="modal-head">
+        <h2 id="backupTitle">导出备份</h2>
+        <button class="icon-btn" type="button" data-close aria-label="关闭">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+
+      <div class="modal-body">
+        <button class="backup-opt primary" type="button" id="backupFullBtn">
+          <span class="bo-head">
+            <span class="bo-title">完整备份</span>
+            <span class="bo-badge">换设备用这个</span>
+          </span>
+          <span class="bo-desc">
+            字卡、聊天记录、全部设置、你自己加的表情、导入的表情包图片、背景音乐——
+            全都在<b>一个文件</b>里。在新设备上导入这一个文件，两边就完全一致。
+          </span>
+        </button>
+
+        <button class="backup-opt" type="button" id="backupCardsBtn">
+          <span class="bo-head"><span class="bo-title">只导出字卡库</span></span>
+          <span class="bo-desc">轻量的纯文本备份，不含聊天记录和图片音乐，适合分享给别人。</span>
+        </button>
+
+        <div class="backup-auto">
+          <div class="ba-head">
+            <span class="ba-title">自动备份到文件</span>
+            <span class="ba-state" id="autoBackupState">未开启</span>
+          </div>
+          <p class="field-tip" id="autoBackupTip">
+            选定一个文件后，之后每次改动都会自动写进去（每 5 秒最多一次），不用再手动导出。
+            把文件放在坚果云 / OneDrive / Dropbox 的同步目录里，手机装个客户端就能拿到最新备份。
+          </p>
+          <div class="ba-btns">
+            <button class="btn btn-ghost btn-sm" type="button" id="autoBackupOnBtn">选择文件并开启</button>
+            <button class="btn btn-ghost btn-sm" type="button" id="autoBackupNowBtn">立即备份一次</button>
+            <button class="btn btn-ghost btn-sm" type="button" id="autoBackupOffBtn">关闭</button>
+          </div>
+        </div>
+      </div>
+
+      <footer class="modal-foot">
+        <button class="btn btn-ghost" type="button" data-close>关闭</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ==================== 弹窗：读信 ==================== -->
+  <div class="modal" id="letterViewModal" hidden>
+    <div class="modal-scrim" data-close></div>
+    <div class="modal-dialog modal-lg" role="dialog" aria-modal="true" aria-labelledby="letterViewTitle">
+      <header class="modal-head">
+        <h2 id="letterViewTitle">一封信</h2>
+        <button class="icon-btn" type="button" data-close aria-label="关闭">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+      <div class="modal-body">
+        <div class="letter-paper" id="letterPaper"></div>
+        <div class="letter-tools">
+          <div class="paper-picker" id="letterViewPapers"></div>
+          <div class="letter-export">
+            <button class="btn btn-ghost btn-sm" type="button" id="letterTxtBtn">导出文字</button>
+            <button class="btn btn-ghost btn-sm" type="button" id="letterImgBtn">导出图片</button>
+          </div>
+        </div>
+      </div>
+      <footer class="modal-foot">
+        <button class="btn btn-ghost btn-sm" type="button" id="letterViewDelBtn">删除这封</button>
+        <button class="btn btn-primary" type="button" data-close>收好</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ==================== 页面：朋友圈 ==================== -->
+  <div class="moments-page" id="momentsPage">
+    <div class="mp-scene">
+      <header class="mp-head">
+        <button class="icon-btn" id="momentsBack" type="button" aria-label="返回主页" title="返回主页">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5 8 12l6.5 7"/></svg>
+        </button>
+        <h1 id="momentsTitle">朋友圈</h1>
+        <span class="mp-count" id="momentCount">共 0 条</span>
+      </header>
+
+      <div class="mp-body">
+        <div class="moment-new">
+          <textarea id="momentInput" rows="2" placeholder="这一刻的想法…"></textarea>
+          <div class="moment-photo-preview" id="momentPhotoPreview" hidden></div>
+          <div class="moment-new-bar">
+            <button class="btn btn-ghost btn-sm" type="button" id="momentPhotoBtn">加图片</button>
+            <span class="moment-photo-name" id="momentPhotoName"></span>
+            <button class="btn btn-primary btn-sm" type="button" id="momentPostBtn">发表</button>
+          </div>
+        </div>
+
+        <div class="moment-bar">
+          <div class="moment-filter" id="momentFilter"></div>
+          <button class="btn btn-ghost btn-sm" type="button" id="momentAskBtn">让梦角发一条</button>
+        </div>
+
+        <div class="moment-list" id="momentList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 弹窗：纪念日 ==================== -->
+  <div class="modal" id="anniModal" hidden>
+    <div class="modal-scrim" data-close></div>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="anniTitle">
+      <header class="modal-head">
+        <h2 id="anniTitle">纪念日</h2>
+        <button class="icon-btn" type="button" data-close aria-label="关闭">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+
+      <div class="modal-body">
+        <div class="anni-list" id="anniList"></div>
+
+        <div class="field">
+          <span class="field-label" id="anniFormLabel">添加一个纪念日</span>
+          <input id="anniNameInput" type="text" maxlength="12" placeholder="在一起 / 生日 / 第一次见面" />
+        </div>
+        <div class="field">
+          <span class="field-label">日期</span>
+          <input id="anniDate" type="date" />
+        </div>
+        <label class="check-row">
+          <input type="checkbox" id="anniRepeat" />
+          <span>每年重复（生日、周年这类）</span>
+        </label>
+        <span class="field-tip">
+          只算一次的（比如"在一起"）会显示已经过去多少天；每年重复的会显示距离下一次还有多少天。
+        </span>
+      </div>
+
+      <footer class="modal-foot">
+        <button class="btn btn-ghost" type="button" id="anniCancelEditBtn" hidden>取消编辑</button>
+        <button class="btn btn-primary" type="button" id="anniSaveBtn">添加</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ==================== 弹窗：主页壁纸 ==================== -->
+  <div class="modal" id="wallpaperModal" hidden>
+    <div class="modal-scrim" data-close></div>
+    <div class="modal-dialog modal-sm" role="dialog" aria-modal="true" aria-labelledby="wallpaperTitle">
+      <header class="modal-head">
+        <h2 id="wallpaperTitle">主页壁纸</h2>
+        <button class="icon-btn" type="button" data-close aria-label="关闭">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+      <div class="modal-body">
+        <div class="wp-grid" id="wallpaperGrid"></div>
+        <div class="wp-custom">
+          <button class="btn btn-ghost btn-sm" type="button" id="wallpaperPickBtn">上传自己的图片</button>
+          <button class="btn btn-ghost btn-sm" type="button" id="wallpaperClearBtn">移除图片</button>
+        </div>
+        <span class="field-tip" id="wallpaperName">当前使用内置壁纸</span>
+      </div>
+      <footer class="modal-foot">
+        <button class="btn btn-ghost" type="button" data-close>关闭</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ==================== 弹窗：输入 ==================== -->
+  <div class="modal" id="promptModal" hidden>
+    <div class="modal-scrim" data-close></div>
+    <div class="modal-dialog modal-sm" role="dialog" aria-modal="true" aria-labelledby="promptTitle">
+      <div class="modal-body confirm-body">
+        <h2 id="promptTitle">输入</h2>
+        <p id="promptDesc"></p>
+        <input id="promptInput" type="text" maxlength="20" />
+      </div>
+      <footer class="modal-foot">
+        <button class="btn btn-ghost" type="button" data-close>取消</button>
+        <button class="btn btn-primary" type="button" id="promptOkBtn">确定</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ==================== 弹窗：确认 ==================== -->
+  <div class="modal" id="confirmModal" hidden>
+    <div class="modal-scrim" data-close></div>
+    <div class="modal-dialog modal-sm" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <div class="modal-body confirm-body">
+        <h2 id="confirmTitle">确认操作</h2>
+        <p id="confirmDesc">确定吗？</p>
+      </div>
+      <footer class="modal-foot">
+        <button class="btn btn-ghost" type="button" data-close>取消</button>
+        <button class="btn btn-danger" type="button" id="confirmOkBtn">确定</button>
+      </footer>
+    </div>
+  </div>
+
+  <input type="file" id="jsonFile" accept=".json,application/json" hidden />
+  <input type="file" id="cardFile" accept=".txt,.md,.csv,.json,text/plain,application/json" multiple hidden />
+  <input type="file" id="musicFile" accept="audio/*" hidden />
+  <input type="file" id="stickerFile" accept="image/*" multiple hidden />
+  <input type="file" id="wallpaperFile" accept="image/*" hidden />
+  <input type="file" id="momentPhotoFile" accept="image/*" multiple hidden />
+  <div class="photo-view" id="photoView" hidden>
+    <button class="photo-nav prev" type="button" id="photoPrev" aria-label="上一张">‹</button>
+    <img alt="图片" id="photoViewImg" />
+    <button class="photo-nav next" type="button" id="photoNext" aria-label="下一张">›</button>
+    <span class="photo-counter" id="photoCounter"></span>
+    <button class="photo-save" type="button" id="photoSave">保存图片</button>
+  </div>
+
+  <!-- ==================== 通话全屏界面 ==================== -->
+  <div class="call-layer" id="callLayer" hidden data-state="idle" aria-live="polite">
+    <div class="call-scene">
+      <span class="call-blob cb1"></span>
+      <span class="call-blob cb2"></span>
+      <span class="call-blob cb3"></span>
+      <div class="call-dots" id="callDots"></div>
+      <div class="call-grain"></div>
+
+      <div class="call-topbar">
+        <span class="call-badge">
+          <span id="callBadgeIcon"></span>
+          <span id="callBadgeText">语音通话</span>
+        </span>
+        <span class="call-top-right">
+          <button class="call-lang" id="callLangBtn" type="button" title="字幕语言 / Subtitle language">简</button>
+          <span class="call-duration" id="callDuration">00:00</span>
+        </span>
+      </div>
+
+      <div class="call-center">
+        <div class="call-pulse">
+          <span class="ring"></span>
+          <span class="ring"></span>
+          <span class="ring"></span>
+          <div class="avatar avatar-xxl" id="callAvatar">🌙</div>
+        </div>
+        <h2 class="call-name" id="callName">梦角</h2>
+        <p class="call-status" id="callStatus">正在呼叫…</p>
+        <div class="call-eq">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+      </div>
+
+      <div class="call-caption" id="callCaption" hidden>
+        <span class="caption-tag" id="captionTag"></span>
+        <p class="caption-text" id="captionText"></p>
+      </div>
+
+      <div class="call-actions" id="callActions"></div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
